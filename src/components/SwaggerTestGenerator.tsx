@@ -148,94 +148,83 @@ export const SwaggerTestGenerator = () => {
         Upload your Swagger/OpenAPI specification and choose your AI provider to generate comprehensive test cases including CSV exports and Postman collections
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Input Panel */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Swagger/OpenAPI Specification</CardTitle>
-            <CardDescription>Upload or paste your API specification</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="fileUpload">Upload File</Label>
-              <Input
-                id="fileUpload"
-                type="file"
-                accept=".json,.yaml,.yml"
-                onChange={handleFileUpload}
-                className="cursor-pointer"
-              />
+      <Card>
+        <CardHeader>
+          <CardTitle>Swagger/OpenAPI Specification</CardTitle>
+          <CardDescription>Upload or paste your API specification</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="fileUpload">Upload File</Label>
+            <Input
+              id="fileUpload"
+              type="file"
+              accept=".json,.yaml,.yml"
+              onChange={handleFileUpload}
+              className="cursor-pointer"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="aiProvider">AI Provider</Label>
+            <Select value={aiProvider} onValueChange={(value: 'google' | 'openai') => setAiProvider(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select AI provider" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="google">
+                  <div className="flex items-center gap-2">
+                    <Brain className="h-4 w-4" />
+                    Google AI Studio (Gemini)
+                  </div>
+                </SelectItem>
+                <SelectItem value="openai">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    Azure OpenAI (GPT-4)
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label htmlFor="swaggerContent">Or Paste Content</Label>
+            <Textarea
+              id="swaggerContent"
+              value={swaggerContent}
+              onChange={(e) => setSwaggerContent(e.target.value)}
+              placeholder="Paste your Swagger/OpenAPI specification here..."
+              className="min-h-[300px] font-mono text-sm"
+            />
+          </div>
+
+          <Button 
+            onClick={generateTestCases} 
+            disabled={isProcessing || !swaggerContent.trim()}
+            className="w-full"
+          >
+            {aiProvider === 'google' ? <Brain className="mr-2 h-4 w-4" /> : <Zap className="mr-2 h-4 w-4" />}
+            {isProcessing ? `Generating with ${aiProvider === 'google' ? 'Google AI' : 'Azure OpenAI'}...` : `Generate Test Cases with ${aiProvider === 'google' ? 'Google AI' : 'Azure OpenAI'}`}
+          </Button>
+
+          {isProcessing && (
+            <div className="space-y-2">
+              <Progress value={progress} className="w-full" />
+              <p className="text-sm text-muted-foreground text-center">
+                {progress < 30 ? "Analyzing Swagger specification..." :
+                 progress < 70 ? `Generating test cases with ${aiProvider === 'google' ? 'Google AI Studio' : 'Azure OpenAI'}...` :
+                 "Finalizing results..."}
+              </p>
             </div>
+          )}
 
-            <div>
-              <Label htmlFor="aiProvider">AI Provider</Label>
-              <Select value={aiProvider} onValueChange={(value: 'google' | 'openai') => setAiProvider(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select AI provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="google">
-                    <div className="flex items-center gap-2">
-                      <Brain className="h-4 w-4" />
-                      Google AI Studio (Gemini)
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="openai">
-                    <div className="flex items-center gap-2">
-                      <Zap className="h-4 w-4" />
-                      Azure OpenAI (GPT-4)
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="swaggerContent">Or Paste Content</Label>
-              <Textarea
-                id="swaggerContent"
-                value={swaggerContent}
-                onChange={(e) => setSwaggerContent(e.target.value)}
-                placeholder="Paste your Swagger/OpenAPI specification here..."
-                className="min-h-[300px] font-mono text-sm"
-              />
-            </div>
-
-            <Button 
-              onClick={generateTestCases} 
-              disabled={isProcessing || !swaggerContent.trim()}
-              className="w-full"
-            >
-              {aiProvider === 'google' ? <Brain className="mr-2 h-4 w-4" /> : <Zap className="mr-2 h-4 w-4" />}
-              {isProcessing ? `Generating with ${aiProvider === 'google' ? 'Google AI' : 'Azure OpenAI'}...` : `Generate Test Cases with ${aiProvider === 'google' ? 'Google AI' : 'Azure OpenAI'}`}
-            </Button>
-
-            {isProcessing && (
-              <div className="space-y-2">
-                <Progress value={progress} className="w-full" />
-                <p className="text-sm text-muted-foreground text-center">
-                  {progress < 30 ? "Analyzing Swagger specification..." :
-                   progress < 70 ? `Generating test cases with ${aiProvider === 'google' ? 'Google AI Studio' : 'Azure OpenAI'}...` :
-                   "Finalizing results..."}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Results Panel */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Generation Results</CardTitle>
-            <CardDescription>Export options for generated test cases</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          {testCases && testCases.length > 0 && (
+            <div className="flex gap-2 mt-4">
               <Button 
                 onClick={downloadCSV} 
-                disabled={!testCases || testCases.length === 0}
                 variant="outline"
-                className="w-full"
+                size="sm"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Download CSV
@@ -245,21 +234,15 @@ export const SwaggerTestGenerator = () => {
                 onClick={downloadPostmanCollection} 
                 disabled={!postmanCollection}
                 variant="outline"
-                className="w-full"
+                size="sm"
               >
                 <FileJson className="mr-2 h-4 w-4" />
                 Download Postman
               </Button>
             </div>
-
-            {testCases && testCases.length > 0 && (
-              <div className="text-sm text-muted-foreground">
-                Generated {testCases.length - 1} test cases
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Preview Panels */}
       {testCases && testCases.length > 0 && (
