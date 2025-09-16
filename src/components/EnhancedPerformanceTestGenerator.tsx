@@ -1061,121 +1061,120 @@ export const EnhancedPerformanceTestGenerator = () => {
             </Dialog>
           </div>
 
-          <div className="w-full">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 w-full">
-              <Card className="flex-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Generated Reports
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingReports ? (
-                    <div className="space-y-2">
-                      {[1, 2, 3].map(i => (
-                        <div key={i} className="h-16 bg-muted animate-pulse rounded" />
-                      ))}
-                    </div>
-                  ) : reports.length === 0 ? (
-                    <p className="text-muted-foreground text-center py-8">
-                      No reports generated yet. Click "Generate Report" to create your first analysis.
-                    </p>
-                  ) : (
-                    <ScrollArea className="h-[500px] w-full">
-                      <div className="space-y-2 pr-4">
-                        {reports.map((report) => (
-                          <div
-                            key={report.id}
-                            className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                              selectedReport?.id === report.id 
-                                ? 'border-primary bg-primary/5' 
-                                : 'hover:border-muted-foreground'
-                            }`}
-                            onClick={() => setSelectedReport(report)}
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-medium text-sm truncate">
-                                  {report.report_name}
-                                </h4>
-                                <p className="text-xs text-muted-foreground">
-                                  {new Date(report.created_at).toLocaleDateString()}
-                                </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Badge variant="outline" className="text-xs">
-                                    {report.ai_provider}
-                                  </Badge>
-                                  <span className="text-xs text-muted-foreground">
-                                    {report.csv_files_metadata?.length || 0} files
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    downloadReportAsHTML(report);
-                                  }}
-                                >
-                                  <FileDown className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteReport(report.id);
-                                  }}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
+          <div className="space-y-6 w-full">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Generated Reports
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoadingReports ? (
+                  <div className="space-y-2">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-16 bg-muted animate-pulse rounded" />
+                    ))}
+                  </div>
+                ) : reports.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">
+                    No reports generated yet. Click "Generate Report" to create your first analysis.
+                  </p>
+                ) : (
+                  <ScrollArea className="h-[400px] w-full">
+                    <div className="space-y-2 pr-4">
+                      {reports.map((report) => (
+                        <div
+                          key={report.id}
+                          className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                            selectedReport?.id === report.id 
+                              ? 'border-primary bg-primary/5' 
+                              : 'hover:border-muted-foreground'
+                          }`}
+                          onClick={() => setSelectedReport(report)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h4 className="font-medium text-sm truncate">
+                                {report.report_name}
+                              </h4>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(report.created_at).toLocaleDateString()}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {report.ai_provider}
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  {report.csv_files_metadata?.length || 0} files
+                                </span>
                               </div>
                             </div>
+                            <div className="flex gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  downloadReportAsHTML(report);
+                                }}
+                              >
+                                <FileDown className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteReport(report.id);
+                                }}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="flex-1">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Eye className="h-5 w-5" />
-                    Report Preview
-                  </CardTitle>
-                  <CardDescription>
-                    {selectedReport 
-                      ? `${selectedReport.report_name} - Generated on ${new Date(selectedReport.created_at).toLocaleDateString()}` 
-                      : "Select a report from the list to view its content"
-                    }
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {selectedReport ? (
-                    <ScrollArea className="h-[500px] w-full">
-                      <div className="prose max-w-none pr-4">
-                        <div 
-                          className="whitespace-pre-wrap text-sm leading-relaxed p-3 bg-muted/30 rounded"
-                          dangerouslySetInnerHTML={{ __html: selectedReport.report_content }}
-                        />
-                      </div>
-                    </ScrollArea>
-                  ) : (
-                    <div className="h-[500px] flex items-center justify-center text-muted-foreground">
-                      <div className="text-center space-y-2">
-                        <FileText className="h-12 w-12 mx-auto opacity-50" />
-                        <p>Select a report to view preview</p>
-                      </div>
+                        </div>
+                      ))}
                     </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
+                  </ScrollArea>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5" />
+                  Report Preview
+                </CardTitle>
+                <CardDescription>
+                  {selectedReport 
+                    ? `${selectedReport.report_name} - Generated on ${new Date(selectedReport.created_at).toLocaleDateString()}` 
+                    : "Select a report from the list above to view its content"
+                  }
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {selectedReport ? (
+                  <ScrollArea className="h-[600px] w-full">
+                    <div className="prose max-w-none pr-4">
+                      <div 
+                        className="whitespace-pre-wrap text-sm leading-relaxed p-4 bg-muted/30 rounded border"
+                        dangerouslySetInnerHTML={{ __html: selectedReport.report_content }}
+                      />
+                    </div>
+                  </ScrollArea>
+                ) : (
+                  <div className="h-[300px] flex items-center justify-center text-muted-foreground border rounded bg-muted/20">
+                    <div className="text-center space-y-2">
+                      <FileText className="h-16 w-16 mx-auto opacity-30" />
+                      <p className="text-lg">Select a report to view preview</p>
+                      <p className="text-sm">The report content will appear here</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
