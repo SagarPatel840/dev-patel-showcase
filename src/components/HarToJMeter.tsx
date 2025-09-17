@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Upload, Download, Zap, FileText, Settings, BarChart3, CheckCircle, AlertTriangle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -51,6 +52,7 @@ export const HarToJMeter = () => {
     duration: 300,
     loopCount: 1
   });
+  const [aiProvider, setAiProvider] = useState<'google' | 'openai'>('google');
   const { toast } = useToast();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,7 +140,8 @@ export const HarToJMeter = () => {
         body: {
           harContent,
           loadConfig,
-          testPlanName
+          testPlanName,
+          aiProvider
         }
       });
 
@@ -301,6 +304,19 @@ export const HarToJMeter = () => {
                 </div>
               </div>
 
+              <div>
+                <Label htmlFor="aiProvider">AI Provider</Label>
+                <Select value={aiProvider} onValueChange={(value: 'google' | 'openai') => setAiProvider(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="google">Google AI (Gemini)</SelectItem>
+                    <SelectItem value="openai">OpenAI (GPT)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <Button 
                 onClick={processHarFile} 
                 disabled={!harContent || isProcessing}
@@ -315,7 +331,7 @@ export const HarToJMeter = () => {
                 ) : (
                   <>
                     <Zap className="h-4 w-4 mr-2" />
-                    Generate JMeter Script
+                    Generate JMX
                   </>
                 )}
               </Button>

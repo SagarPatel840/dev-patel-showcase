@@ -37,6 +37,7 @@ export const SwaggerToJMeter = () => {
     addCorrelation: true,
     generateCsvConfig: false
   });
+  const [aiProvider, setAiProvider] = useState<'google' | 'openai'>('google');
   const { toast } = useToast();
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -849,6 +850,29 @@ CSV Config: ${config.generateCsvConfig ? 'Enabled' : 'Disabled'}</stringProp>
                 </Select>
               </div>
 
+              <div>
+                <Label htmlFor="aiProvider">AI Provider</Label>
+                <Select value={aiProvider} onValueChange={(value: 'google' | 'openai') => setAiProvider(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="google">Google AI (Gemini)</SelectItem>
+                    <SelectItem value="openai">OpenAI (GPT)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button 
+                onClick={handleGenerateJMeter}
+                disabled={!swaggerContent.trim() || isProcessing}
+                size="lg"
+                className="w-full"
+              >
+                <Zap className="mr-2 h-4 w-4" />
+                {isProcessing ? "Generating..." : "Generate JMX"}
+              </Button>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
                   <Switch
@@ -927,17 +951,7 @@ CSV Config: ${config.generateCsvConfig ? 'Enabled' : 'Disabled'}</stringProp>
       </div>
 
       {/* Actions */}
-      <div className="flex flex-wrap gap-4 justify-center">
-        <Button 
-          onClick={handleGenerateJMeter}
-          disabled={!swaggerContent.trim() || isProcessing}
-          size="lg"
-          className="min-w-[200px]"
-        >
-          <Zap className="mr-2 h-4 w-4" />
-          {isProcessing ? "Generating..." : "Generate JMeter File"}
-        </Button>
-        
+      <div className="flex flex-wrap gap-4 justify-center">        
         {jmeterXml && (
           <Button 
             onClick={handleDownload}

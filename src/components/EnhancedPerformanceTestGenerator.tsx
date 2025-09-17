@@ -472,7 +472,7 @@ export const EnhancedPerformanceTestGenerator = () => {
       }, 200);
 
       const { data, error } = await supabase.functions.invoke('har-to-jmeter', {
-        body: { harContent }
+        body: { harContent, aiProvider }
       });
 
       clearInterval(progressInterval);
@@ -943,58 +943,74 @@ ${rtfContent}
                         />
                       </div>
 
-                      <div>
-                        <Label>Group Requests By</Label>
-                        <Select 
-                          value={swaggerConfig.groupBy} 
-                          onValueChange={(value: 'tag' | 'path') => setSwaggerConfig(prev => ({ ...prev, groupBy: value }))}
-                        >
-                          <SelectTrigger className="mt-2">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="tag">Tags</SelectItem>
-                            <SelectItem value="path">Path Segments</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                       <div>
+                         <Label>Group Requests By</Label>
+                         <Select 
+                           value={swaggerConfig.groupBy} 
+                           onValueChange={(value: 'tag' | 'path') => setSwaggerConfig(prev => ({ ...prev, groupBy: value }))}
+                         >
+                           <SelectTrigger className="mt-2">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="tag">Tags</SelectItem>
+                             <SelectItem value="path">Path Segments</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+
+                       <div>
+                         <Label>AI Provider</Label>
+                         <Select 
+                           value={aiProvider} 
+                           onValueChange={(value: 'google' | 'openai') => setAiProvider(value)}
+                         >
+                           <SelectTrigger className="mt-2">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="google">Google AI (Gemini)</SelectItem>
+                             <SelectItem value="openai">OpenAI (GPT)</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+
+                       <Button 
+                         onClick={processSwagger}
+                         disabled={isSwaggerProcessing || !swaggerContent.trim() || !swaggerConfig.baseUrl.trim()}
+                         className="w-full"
+                       >
+                         {isSwaggerProcessing ? (
+                           <>
+                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                             Processing...
+                           </>
+                         ) : (
+                           <>
+                             <Zap className="h-4 w-4 mr-2" />
+                             Generate JMX
+                           </>
+                         )}
+                       </Button>
                     </div>
 
-                    <div className="space-y-4">
-                      <Button 
-                        onClick={processSwagger}
-                        disabled={isSwaggerProcessing || !swaggerContent.trim() || !swaggerConfig.baseUrl.trim()}
-                        className="w-full"
-                      >
-                        {isSwaggerProcessing ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            <Zap className="h-4 w-4 mr-2" />
-                            Generate JMeter XML
-                          </>
-                        )}
-                      </Button>
-
-                      {swaggerJmeterXml && (
-                        <div className="space-y-3">
-                          <Alert>
-                            <CheckCircle className="h-4 w-4" />
-                            <AlertDescription>
-                              JMeter test plan generated successfully! You can now download the JMX file.
-                            </AlertDescription>
-                          </Alert>
-                          
-                          <Button onClick={downloadSwaggerJMX} variant="outline" className="w-full">
-                            <Download className="h-4 w-4 mr-2" />
-                            Download JMX File
-                          </Button>
-                        </div>
-                      )}
-                    </div>
+                     <div className="space-y-4">
+                       {swaggerJmeterXml && (
+                         <div className="space-y-3">
+                           <Alert>
+                             <CheckCircle className="h-4 w-4" />
+                             <AlertDescription>
+                               JMeter test plan generated successfully! You can now download the JMX file.
+                             </AlertDescription>
+                           </Alert>
+                           
+                           <Button onClick={downloadSwaggerJMX} variant="outline" className="w-full">
+                             <Download className="h-4 w-4 mr-2" />
+                             Download JMX File
+                           </Button>
+                         </div>
+                       )}
+                     </div>
                   </div>
                 </TabsContent>
 
@@ -1012,82 +1028,98 @@ ${rtfContent}
                         />
                       </div>
 
-                      {harFile && (
-                        <div className="p-3 bg-muted rounded-lg">
-                          <p className="text-sm font-medium">Selected file:</p>
-                          <p className="text-sm text-muted-foreground">{harFile.name}</p>
-                        </div>
-                      )}
+                       {harFile && (
+                         <div className="p-3 bg-muted rounded-lg">
+                           <p className="text-sm font-medium">Selected file:</p>
+                           <p className="text-sm text-muted-foreground">{harFile.name}</p>
+                         </div>
+                       )}
+
+                       <div>
+                         <Label>AI Provider</Label>
+                         <Select 
+                           value={aiProvider} 
+                           onValueChange={(value: 'google' | 'openai') => setAiProvider(value)}
+                         >
+                           <SelectTrigger className="mt-2">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="google">Google AI (Gemini)</SelectItem>
+                             <SelectItem value="openai">OpenAI (GPT)</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+
+                       <Button 
+                         onClick={processHar}
+                         disabled={isHarProcessing || !harContent}
+                         className="w-full"
+                       >
+                         {isHarProcessing ? (
+                           <>
+                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                             Processing HAR...
+                           </>
+                         ) : (
+                           <>
+                             <Zap className="h-4 w-4 mr-2" />
+                             Generate JMX
+                           </>
+                         )}
+                       </Button>
                     </div>
 
-                    <div className="space-y-4">
-                      <Button 
-                        onClick={processHar}
-                        disabled={isHarProcessing || !harContent}
-                        className="w-full"
-                      >
-                        {isHarProcessing ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Processing HAR...
-                          </>
-                        ) : (
-                          <>
-                            <Zap className="h-4 w-4 mr-2" />
-                            Convert to JMeter
-                          </>
-                        )}
-                      </Button>
+                     <div className="space-y-4">
+                       {isHarProcessing && harProgress > 0 && (
+                         <div className="space-y-2">
+                           <Progress value={harProgress} className="w-full" />
+                           <p className="text-sm text-center text-muted-foreground">
+                             Processing... {harProgress}%
+                           </p>
+                         </div>
+                       )}
 
-                      {isHarProcessing && harProgress > 0 && (
-                        <div className="space-y-2">
-                          <Progress value={harProgress} className="w-full" />
-                          <p className="text-sm text-center text-muted-foreground">
-                            Processing... {harProgress}%
-                          </p>
-                        </div>
-                      )}
+                       {harResult && (
+                         <div className="space-y-3">
+                           <Alert>
+                             <CheckCircle className="h-4 w-4" />
+                             <AlertDescription>
+                               HAR file converted successfully! JMeter test plan is ready for download.
+                             </AlertDescription>
+                           </Alert>
+                           
+                           <Button onClick={downloadHarJMX} variant="outline" className="w-full">
+                             <Download className="h-4 w-4 mr-2" />
+                             Download JMX File
+                           </Button>
 
-                      {harResult && (
-                        <div className="space-y-3">
-                          <Alert>
-                            <CheckCircle className="h-4 w-4" />
-                            <AlertDescription>
-                              HAR file converted successfully! JMeter test plan is ready for download.
-                            </AlertDescription>
-                          </Alert>
-                          
-                          <Button onClick={downloadHarJMX} variant="outline" className="w-full">
-                            <Download className="h-4 w-4 mr-2" />
-                            Download JMX File
-                          </Button>
-
-                          <div className="p-4 bg-muted rounded-lg space-y-2">
-                            <h4 className="font-medium">Analysis Summary</h4>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">Total Requests:</span>
-                                <span className="ml-2 font-medium">{harResult.summary.totalRequests}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Unique Domains:</span>
-                                <span className="ml-2 font-medium">{harResult.summary.uniqueDomains.length}</span>
-                              </div>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Methods Used:</span>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {harResult.summary.methodsUsed.map(method => (
-                                  <Badge key={method} variant="secondary" className="text-xs">
-                                    {method}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                           <div className="p-4 bg-muted rounded-lg space-y-2">
+                             <h4 className="font-medium">Analysis Summary</h4>
+                             <div className="grid grid-cols-2 gap-4 text-sm">
+                               <div>
+                                 <span className="text-muted-foreground">Total Requests:</span>
+                                 <span className="ml-2 font-medium">{harResult.summary.totalRequests}</span>
+                               </div>
+                               <div>
+                                 <span className="text-muted-foreground">Unique Domains:</span>
+                                 <span className="ml-2 font-medium">{harResult.summary.uniqueDomains.length}</span>
+                               </div>
+                             </div>
+                             <div>
+                               <span className="text-muted-foreground">Methods Used:</span>
+                               <div className="flex flex-wrap gap-1 mt-1">
+                                 {harResult.summary.methodsUsed.map(method => (
+                                   <Badge key={method} variant="secondary" className="text-xs">
+                                     {method}
+                                   </Badge>
+                                 ))}
+                               </div>
+                             </div>
+                           </div>
+                         </div>
+                       )}
+                     </div>
                   </div>
                 </TabsContent>
               </Tabs>
