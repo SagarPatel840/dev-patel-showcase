@@ -46,7 +46,7 @@ serve(async (req) => {
   }
 
   try {
-    const { harContent, loadConfig, testPlanName = "HAR Performance Test", aiProvider = 'openai' } = await req.json();
+    const { harContent, loadConfig, testPlanName = "HAR Performance Test", aiProvider = 'openai', additionalPrompt = '' } = await req.json();
     
     console.log('Processing HAR file with OpenAI...');
     
@@ -118,7 +118,10 @@ HAR file content (JSON format) will be provided.
 ### Task:  
 Generate the complete JMX file according to the above rules.
 
-### HAR file content:
+${additionalPrompt ? `### Additional Requirements:
+${additionalPrompt}
+
+` : ''}### HAR file content:
 ${JSON.stringify(harData, null, 2)}`;
 
     let providerUsed = aiProvider;

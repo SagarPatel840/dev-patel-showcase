@@ -36,6 +36,8 @@ export const SwaggerToJMeter = () => {
   const [swaggerContent, setSwaggerContent] = useState("");
   const [jmeterXml, setJmeterXml] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [additionalPrompt, setAdditionalPrompt] = useState("");
+  const [aiProvider, setAiProvider] = useState<'google' | 'openai'>('google');
   const [config, setConfig] = useState<JMeterConfig>({
     threadCount: 10,
     rampUpTime: 60,
@@ -721,40 +723,37 @@ CSV Config: ${config.generateCsvConfig ? 'Enabled' : 'Disabled'}</stringProp>
     setIsProcessing(true);
     
     try {
-      // Parse swagger/openapi spec
-      let spec;
-      try {
-        spec = JSON.parse(swaggerContent);
-      } catch {
-        try {
-          spec = yaml.load(swaggerContent);
-        } catch (yamlError) {
-          throw new Error("Invalid JSON or YAML format");
+      // Use AI-based JMX generation
+      const { data, error } = await supabase.functions.invoke('ai-jmeter-generator', {
+        body: {
+          swaggerContent,
+          config,
+          aiProvider,
+          additionalPrompt
         }
+      });
+
+      if (error) {
+        console.error('Swagger to JMX error:', error);
+        throw new Error(error.message || 'Unknown error occurred');
       }
 
-      // Basic validation
-      if (!spec || typeof spec !== 'object') {
-        throw new Error("Invalid specification format");
-      }
-      
-      if (!spec.openapi && !spec.swagger) {
-        throw new Error("Not a valid OpenAPI/Swagger specification");
-      }
-      
-      if (!spec.paths || typeof spec.paths !== 'object') {
-        throw new Error("No paths found in the specification");
-      }
-      
-      // Generate JMX directly without AI
-      const jmxContent = generateJMeterXml(spec, config);
-      setJmeterXml(jmxContent);
+      console.log('AI-generated JMX content received:', {
+        provider: aiProvider,
+        endpoints: data?.endpointCount || 0,
+        generatedByAI: true,
+        testPlanName: config.testPlanName
+      });
 
-      const endpointCount = Object.keys(spec.paths).length;
+      if (!data || !data.jmxContent) {
+        throw new Error('No JMX content received from AI');
+      }
+
+      setJmeterXml(data.jmxContent);
       
       toast({
         title: "JMeter Test Plan Generated",
-        description: `Successfully generated test plan for ${endpointCount} endpoints`,
+        description: `AI-generated test plan ready with ${data.endpointCount || 'multiple'} endpoints`,
       });
     } catch (error) {
       console.error('Error generating JMeter file:', error);
@@ -1017,7 +1016,35 @@ CSV Config: ${config.generateCsvConfig ? 'Enabled' : 'Disabled'}</stringProp>
                 </div>
               </div>
 
-              <Button 
+              <div>
+                <Label htmlFor="aiProvider">AI Provider</Label>
+                <Select value={aiProvider} onValueChange={(value: 'google' | 'openai') => setAiProvider(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="google">Google AI (Gemini)</SelectItem>
+                    <SelectItem value="openai">OpenAI (GPT)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="additionalPrompt">Additional Prompt Details</Label>
+                <Textarea
+                  id="additionalPrompt"
+                  placeholder="Enter any additional instructions or specific requirements for JMX generation..."
+                  value={additionalPrompt}
+                  onChange={(e) => setAdditionalPrompt(e.target.value)}
+                  rows={3}
+                  className="resize-none"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Optional: Add extra context or specific requirements for AI-generated JMX
+                </p>
+              </div>
+
+              <Button
                 onClick={handleGenerateJMeter}
                 disabled={!swaggerContent.trim() || isProcessing}
                 size="lg"

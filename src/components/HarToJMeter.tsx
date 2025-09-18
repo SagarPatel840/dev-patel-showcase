@@ -58,6 +58,7 @@ export const HarToJMeter = () => {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<ProcessingResult | null>(null);
   const [testPlanName, setTestPlanName] = useState("HAR Performance Test");
+  const [additionalPrompt, setAdditionalPrompt] = useState("");
   const [loadConfig, setLoadConfig] = useState<LoadConfig>({
     threadCount: 10,
     rampUpTime: 60,
@@ -164,7 +165,8 @@ export const HarToJMeter = () => {
           harContent,
           loadConfig,
           testPlanName,
-          aiProvider
+          aiProvider,
+          additionalPrompt
         }
       });
 
@@ -491,7 +493,22 @@ export const HarToJMeter = () => {
                 </Select>
               </div>
 
-              <Button 
+              <div>
+                <Label htmlFor="additionalPrompt">Additional Prompt Details</Label>
+                <Textarea
+                  id="additionalPrompt"
+                  placeholder="Enter any additional instructions or specific requirements for JMX generation..."
+                  value={additionalPrompt}
+                  onChange={(e) => setAdditionalPrompt(e.target.value)}
+                  rows={3}
+                  className="resize-none"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Optional: Add extra context or specific requirements for AI-generated JMX
+                </p>
+              </div>
+
+              <Button
                 onClick={processHarFile} 
                 disabled={!harContent || isProcessing}
                 className="w-full"
