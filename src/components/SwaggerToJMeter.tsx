@@ -56,7 +56,6 @@ export const SwaggerToJMeter = () => {
     useKeepAlive: true,
     enableReporting: true
   });
-  const [aiProvider, setAiProvider] = useState<'google' | 'openai'>('google');
   const { toast } = useToast();
 
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -720,6 +719,7 @@ CSV Config: ${config.generateCsvConfig ? 'Enabled' : 'Disabled'}</stringProp>
     }
 
     setIsProcessing(true);
+    
     try {
       // Parse swagger/openapi spec
       let spec;
@@ -746,28 +746,23 @@ CSV Config: ${config.generateCsvConfig ? 'Enabled' : 'Disabled'}</stringProp>
         throw new Error("No paths found in the specification");
       }
       
-      // Call AI-powered JMeter generator
-      const { data, error } = await supabase.functions.invoke('ai-jmeter-generator', {
-        body: {
-          swaggerSpec: spec,
-          loadConfig: config,
-          aiProvider
-        }
-      });
+      // Generate JMX directly without AI
+      const jmxContent = generateJMeterXml(spec, config);
+      setJmeterXml(jmxContent);
 
-      if (error) throw error;
-
-      setJmeterXml(data.jmeterXml);
-
+      const endpointCount = Object.keys(spec.paths).length;
+      
       toast({
-        title: "AI-Generated JMeter Test Plan Ready",
-        description: `Created with ${data.metadata.provider} for ${data.metadata.endpoints} endpoints`,
+        title: "JMeter Test Plan Generated",
+        description: `Successfully generated test plan for ${endpointCount} endpoints`,
       });
     } catch (error) {
       console.error('Error generating JMeter file:', error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
+      
       toast({
         title: "Error generating JMeter file",
-        description: error instanceof Error ? error.message : "An unexpected error occurred.",
+        description: `Error: ${errorMessage}`,
         variant: "destructive",
       });
     } finally {
@@ -964,19 +959,7 @@ CSV Config: ${config.generateCsvConfig ? 'Enabled' : 'Disabled'}</stringProp>
                 </Select>
               </div>
 
-              <div>
-                <Label htmlFor="aiProvider">AI Provider</Label>
-                <Select value={aiProvider} onValueChange={(value: 'google' | 'openai') => setAiProvider(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="google">Google AI (Gemini)</SelectItem>
-                    <SelectItem value="openai">OpenAI (GPT)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
+               
               <h4 className="text-sm font-medium">JMeter Configuration</h4>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center space-x-2">
@@ -1041,7 +1024,7 @@ CSV Config: ${config.generateCsvConfig ? 'Enabled' : 'Disabled'}</stringProp>
                 className="w-full"
               >
                 <Zap className="mr-2 h-4 w-4" />
-                {isProcessing ? "Generating with AI..." : "Generate JMX"}
+                {isProcessing ? "Generating JMeter Test Plan..." : "Generate JMeter Test Plan"}
               </Button>
             </div>
           </CardContent>

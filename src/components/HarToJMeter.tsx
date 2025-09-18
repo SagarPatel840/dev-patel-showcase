@@ -171,19 +171,47 @@ export const HarToJMeter = () => {
       clearInterval(progressInterval);
       setProgress(100);
 
-      if (error) throw error;
+      if (error) {
+        console.error('HAR processing error:', error);
+        throw new Error(error.message || 'Unknown error occurred');
+      }
 
-      setResult(data);
+      console.log('HAR to JMX response data:', data);
+
+      if (!data || !data.jmxContent) {
+        throw new Error('No JMX content received from server');
+      }
+
+      const safeResult: ProcessingResult = {
+        jmxContent: data.jmxContent,
+        analysis: data.analysis ?? {
+          correlationFields: [],
+          requestGroups: [],
+          parameterization: [],
+          scenarios: [],
+          assertions: []
+        },
+        summary: data.summary ?? {
+          totalRequests: 0,
+          uniqueDomains: [],
+          methodsUsed: [],
+          avgResponseTime: 0
+        }
+      };
+
+      setResult(safeResult);
       
       toast({
         title: "JMeter Script Generated",
         description: "Your performance test script is ready for download!"
       });
     } catch (error) {
-      console.error('Processing error:', error);
+      console.error('HAR processing error:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to process HAR file";
+      
       toast({
         title: "Processing Failed",
-        description: error instanceof Error ? error.message : "Failed to process HAR file",
+        description: `Error: ${errorMessage}`,
         variant: "destructive"
       });
     } finally {
